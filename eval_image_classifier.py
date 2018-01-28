@@ -266,6 +266,18 @@ def main(_):
     else:
       variables_to_restore = slim.get_variables_to_restore()
 
+    # print(dir(variables_to_restore))
+    print(type(variables_to_restore))
+    ignore_variables = ['stream0/vgg_16/fc8/weights:0', 'stream0/vgg_16/fc8/biases:0',]
+    new_variables_to_restore = []
+    for var in variables_to_restore:
+      if(var.name not in ignore_variables):
+        new_variables_to_restore.append(var)
+
+    variables_to_restore = new_variables_to_restore
+    for var in variables_to_restore:
+      print(var.name)
+
     predictions = tf.argmax(logits, 1)
     # rgirdhar: Because of the following, can't use with batch_size=1
     if FLAGS.batch_size > 1:

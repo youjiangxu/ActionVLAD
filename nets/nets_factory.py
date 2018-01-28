@@ -104,6 +104,7 @@ def get_network_fn(
                                  is_training=is_training,
                                  dropout_keep_prob=dropout_keep_prob,
                                  conv_only=(pool_type == 'netvlad' or
+                                  pool_type == 'seqvlad' or
                                   pool_type == 'avg-conv' or
                                   pool_type == 'max-conv' or
                                   stream_pool_type ==
@@ -111,10 +112,11 @@ def get_network_fn(
                                   stream_pool_type == 'one-bag-and-netvlad'),
                                  **kwargs)
           all_out_nets.append(net)
-          if pool_type in ['netvlad', 'avg-conv', 'max-conv']:
+          if pool_type in ['netvlad', 'avg-conv', 'max-conv', 'seqvlad']:
             # last_conv = end_points[tf.get_variable_scope().name + '/' +
             #                       conv_endpoint_map[name]]
             last_conv = net  # both VGG and resnet have conv_only implemented
+            print('##### ##### last_conv shape:', last_conv.get_shape().as_list())
             if pool_type == 'netvlad':
               net, netvlad_end_points = \
                   pooling.netvlad(last_conv, batch_size, 0.0,
@@ -127,6 +129,12 @@ def get_network_fn(
             elif pool_type == 'max-conv':
               net = pooling.pool_conv(last_conv, batch_size, 'max')
               end_points[tf.get_variable_scope().name + '/max-conv'] = net
+            elif pool_type == 'seqvlad':
+              net, netvlad_end_points = \
+                  pooling.seqvlad(last_conv, batch_size, 0.0,
+                                  netvlad_initCenters=netvlad_centers[sid])
+              end_points[tf.get_variable_scope().name + '/seqvlad'] = net
+              end_points.update(netvlad_end_points)
             if batch_norm:
               with tf.variable_scope('pooled-batch-norm'):
                 net = slim.batch_norm(net, is_training=is_training)

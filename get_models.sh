@@ -14,12 +14,12 @@ mkdir -p $KMEANS_DIR/hmdb51/
 ## rgb
 # the following model is not required
 # wget https://cmu.box.com/shared/static/in0tld2qtede394yyp9kuvi592a292pf.npy -O $IMAGENET_MODEL_DIR/vgg_16_action_rgb_pretrain.caffemodel.npy
-wget https://cmu.box.com/shared/static/wryzxgpftekv9svjs2ar9er02rrqv620.ckpt -O $IMAGENET_MODEL_DIR/vgg_16_action_rgb_pretrain_uptoConv5.ckpt
+#wget https://cmu.box.com/shared/static/wryzxgpftekv9svjs2ar9er02rrqv620.ckpt -O $IMAGENET_MODEL_DIR/vgg_16_action_rgb_pretrain_uptoConv5.ckpt
 ## flow
 
 # Two-stream models (HMDB51)
 ## flow
-wget https://cmu.box.com/shared/static/q7dqbis20z5ui27tz3hvug8mqg2w0tvs.ckpt -O $TWO_STREAM_DIR/hmdb51/flow/split1.ckpt
+#wget https://cmu.box.com/shared/static/q7dqbis20z5ui27tz3hvug8mqg2w0tvs.ckpt -O $TWO_STREAM_DIR/hmdb51/flow/split1.ckpt
 wget https://cmu.box.com/shared/static/m1lz6tii09kn379ya8gggw0iaa4f7cw2.ckpt -O $TWO_STREAM_DIR/hmdb51/flow/split2.ckpt
 wget https://cmu.box.com/shared/static/brk2z9rev609o2a81p3gyztvmtpwmwke.ckpt -O $TWO_STREAM_DIR/hmdb51/flow/split3.ckpt
 

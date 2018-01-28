@@ -305,7 +305,7 @@ tf.app.flags.DEFINE_string(
 
 tf.app.flags.DEFINE_string(
     'pooling', None,
-    'Set =[netvlad/avg-conv] to train with that.')
+    'Set =[netvlad/avg-conv/seqvlad] to train with that.')
 
 tf.app.flags.DEFINE_string(
     'classifier_type', 'linear',
