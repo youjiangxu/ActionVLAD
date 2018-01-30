@@ -30,7 +30,7 @@ python \
   --clip_gradients 5 \
   --num_streams 1 \
   --trainable_scopes stream0/SeqVLAD,stream0/classifier \
-  --checkpoint_exclude_scopes stream0/NetVLAD,stream0/classifier,stream0/SeqVLAD \
+  --checkpoint_exclude_scopes stream0/classifier,stream0/SeqVLAD \
   --train_image_size 224 \
   --weight_decay 4e-5 \
   --split_id 1 \

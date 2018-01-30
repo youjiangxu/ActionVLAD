@@ -126,10 +126,13 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
 
         # model parameters
         centers_num = 64
+        input_shape = net.get_shape().as_list()
+        # initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(input_shape[-1])) # yanbin liu
         # share_w
         share_w = slim.model_variable('share_w',
                               shape=[3, 3, 512, centers_num], #[filter_height, filter_width, in_channels, out_channels]
-                              initializer=tf.contrib.layers.xavier_initializer_conv2d(),
+                              initializer=tf.contrib.layers.xavier_initializer(),
+                              
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
         share_b = slim.model_variable('share_b',
@@ -139,23 +142,23 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
 
         centers = slim.model_variable('centers',
                               shape=[1,512,centers_num],
-                              initializer=tf.constant_initializer(cluster_centers),
+                              initializer=tf.truncated_normal_initializer(stddev=0.1),#tf.constant_initializer(cluster_centers),
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
 
         U_z = slim.model_variable('U_z',
                               shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
-                              initializer=tf.contrib.layers.xavier_initializer_conv2d(),
+                              initializer=tf.contrib.layers.xavier_initializer(),
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
         U_r = slim.model_variable('U_r',
                               shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
-                              initializer=tf.contrib.layers.xavier_initializer_conv2d(),
+                              initializer=tf.contrib.layers.xavier_initializer(),
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
         U_h = slim.model_variable('U_h',
                               shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
-                              initializer=tf.contrib.layers.xavier_initializer_conv2d(),
+                              initializer=tf.contrib.layers.xavier_initializer(),
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
 
@@ -170,6 +173,8 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
         # seqvlad 
         input_shape = net.get_shape().as_list()
         timesteps = input_shape[0]//videos_per_batch
+        print("################## timesteps", timesteps)
+	
         assert input_shape[0]%videos_per_batch==0
         # assignment = tf.reshape(net,[videos_per_batch, -1, input_shape[]])
         w_conv_x = tf.add(tf.nn.conv2d(net, share_w, [1,1,1,1], 'SAME', name='w_conv_x'),tf.reshape(share_b,[1, 1, 1, centers_num]))
@@ -202,13 +207,14 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
           initial_state = tf.expand_dims(initial_state,dim=-1)
           initial_state = tf.tile(initial_state,[1,1,1,output_dims])
           return initial_state
+
         def step(time, hidden_states, h_tm1):
           assign_t = input_assignments.read(time) # batch_size * dim
           print('h_tm1', h_tm1.get_shape().as_list())
-          r = tf.nn.sigmoid(assign_t+ tf.nn.conv2d(h_tm1, U_r, [1,1,1,1], 'SAME', name='r'))
-          z = tf.nn.sigmoid(assign_t+ tf.nn.conv2d(h_tm1, U_z, [1,1,1,1], 'SAME', name='z'))
+          r = tf.nn.sigmoid(tf.add(assign_t, tf.nn.conv2d(h_tm1, U_r, [1,1,1,1], 'SAME', name='r')))
+          z = tf.nn.sigmoid(tf.add(assign_t, tf.nn.conv2d(h_tm1, U_z, [1,1,1,1], 'SAME', name='z')))
 
-          hh = tf.tanh(assign_t+ tf.nn.conv2d(r*h_tm1, U_h,  [1,1,1,1], 'SAME', name='hh'))
+          hh = tf.tanh(tf.add(assign_t, tf.nn.conv2d(r*h_tm1, U_h,  [1,1,1,1], 'SAME', name='hh')))
 
           h = (1-z)*hh + z*h_tm1
         
@@ -220,7 +226,7 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
         print('assignments', assignments.get_shape().as_list())
         initial_state = get_init_state(assignments,centers_num)
         print('initial_state', initial_state.get_shape().as_list())
-
+        timesteps = tf.constant(timesteps, dtype='int32',name='timesteps')	
         feature_out = tf.while_loop(
                 cond=lambda time, *_: time < timesteps,
                 body=step,
@@ -229,29 +235,29 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
                 swap_memory=True)
 
 
-        hidden_states = feature_out[-2]
+        recur_assigns = feature_out[-2]
         if hasattr(hidden_states, 'stack'):
-          assignment = hidden_states.stack()
+          recur_assigns = recur_assigns.stack()
         else:
-          assignment = hidden_states.pack()
+          recur_assigns = recur_assigns.pack()
 
         
         
         axis = [1,0]+list(range(2,5))  # axis = [1,0,2]
-        assignment = tf.transpose(assignment, perm=axis)
+        recur_assigns = tf.transpose(recur_assigns, perm=axis)
 
 
-        assignment = tf.reshape(assignment,[-1,input_shape[1]*input_shape[2],centers_num])
+        recur_assigns = tf.reshape(recur_assigns,[-1,input_shape[1]*input_shape[2],centers_num])
 
         # assignment = tf.nn.softmax(assignment,dim=-1)
 
         # for alpha * c
-        a_sum = tf.reduce_sum(assignment,-2,keep_dims=True)
+        a_sum = tf.reduce_sum(recur_assigns,-2,keep_dims=True)
         a = tf.multiply(a_sum,centers)
         # for alpha * x
-        assignment = tf.transpose(assignment,perm=[0,2,1])
+        recur_assigns = tf.transpose(recur_assigns,perm=[0,2,1])
         net = tf.reshape(net,[-1,input_shape[1]*input_shape[2],input_shape[3]])
-        vlad = tf.matmul(assignment,net)
+        vlad = tf.matmul(recur_assigns,net)
         vlad = tf.transpose(vlad, perm=[0,2,1])
 
         # for differnce
