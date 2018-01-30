@@ -1,10 +1,10 @@
 # cd ..
-LD_PRELOAD=/usr/lib/libtcmalloc.so.4 \
-  python \
+#LD_PRELOAD=/usr/lib/libtcmalloc.so.4 \
+python \
   train_image_classifier.py \
   --batch_size 3 \
-  --gpus 0 \
-  --frames_per_video 2 \
+  --gpus 0,1,2,3 \
+  --frames_per_video 25 \
   --iter_size 2 \
   --checkpoint_path models/PreTrained/imagenet-trained-CUHK/vgg_16_action_rgb_pretrain_uptoConv5.ckpt \
   --checkpoint_style v2_withStream \
@@ -29,7 +29,7 @@ LD_PRELOAD=/usr/lib/libtcmalloc.so.4 \
   --learning_rate_decay_factor 0.1 \
   --clip_gradients 5 \
   --num_streams 1 \
-  --trainable_scopes stream0/classifier \
+  --trainable_scopes stream0/SeqVLAD,stream0/classifier \
   --checkpoint_exclude_scopes stream0/NetVLAD,stream0/classifier,stream0/SeqVLAD \
   --train_image_size 224 \
   --weight_decay 4e-5 \
