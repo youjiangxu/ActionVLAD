@@ -4,14 +4,14 @@ if __name__ == '__main__':
 	
 	# main()
 	split_num = 1
-	partition = 'train'
-	ori_file_list_root = '/home/sensetime/usr/local/code/ActionVLAD/data/ucf101/train_test_lists/action_back'
+	partition = 'test'
+	ori_file_list_root = './data/ucf101/train_test_lists/action_back'
 	ori_file_list_path = ori_file_list_root+'/'+partition+'_split'+str(split_num)+'.txt'
 	print(ori_file_list_path)
 	#output path
-	output_path = '/home/sensetime/usr/local/code/ActionVLAD/data/ucf101/train_test_lists'+'/'+partition+'_split'+str(split_num)+'.txt'
+	output_path = './data/ucf101/train_test_lists'+'/'+partition+'_split'+str(split_num)+'.txt'
 
-	img_root = '/data/UCF-101-frames'
+	img_root = './data/ucf101/frames'
 	wf = open(output_path,'w')
 	with open(ori_file_list_path,'r') as rf:
 		for idx, line in enumerate(rf):
