@@ -121,46 +121,89 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
       #   cluster_centers = kmeans.cluster_centers_
     with tf.variable_scope('SeqVLAD'):
         # normalize features
-        net_normed = tf.nn.l2_normalize(net, 3, name='FeatureNorm')
-        end_points[tf.get_variable_scope().name + '/net_normed'] = net_normed
-
+        #net_normed = tf.nn.l2_normalize(net, 3, name='FeatureNorm')
+        #end_points[tf.get_variable_scope().name + '/net_normed'] = net_normed
+        net_relu = tf.nn.relu(net)
+        end_points[tf.get_variable_scope().name+'/net_relu']=net_relu
         # model parameters
         centers_num = 64
         input_shape = net.get_shape().as_list()
         # initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(input_shape[-1])) # yanbin liu
+        
+        
         # share_w
-        share_w = slim.model_variable('share_w',
+        share_w = tf.get_variable('share_w',
                               shape=[3, 3, 512, centers_num], #[filter_height, filter_width, in_channels, out_channels]
                               initializer=tf.contrib.layers.xavier_initializer(),
                               
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
-        share_b = slim.model_variable('share_b',
+        share_b = tf.get_variable('share_b',
                               shape=[64],
                               initializer=tf.truncated_normal_initializer(stddev=0.1),
                               regularizer=slim.l2_regularizer(weight_decay))
 
-        centers = slim.model_variable('centers',
+        centers = tf.get_variable('centers',
                               shape=[1,512,centers_num],
                               initializer=tf.truncated_normal_initializer(stddev=0.1),#tf.constant_initializer(cluster_centers),
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
 
-        U_z = slim.model_variable('U_z',
+        U_z = tf.get_variable('U_z',
                               shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
                               initializer=tf.contrib.layers.xavier_initializer(),
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
-        U_r = slim.model_variable('U_r',
+        U_r = tf.get_variable('U_r',
                               shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
                               initializer=tf.contrib.layers.xavier_initializer(),
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
-        U_h = slim.model_variable('U_h',
+        U_h = tf.get_variable('U_h',
                               shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
                               initializer=tf.contrib.layers.xavier_initializer(),
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
+        slim.add_model_variable(share_w)
+        slim.add_model_variable(share_b)
+        slim.add_model_variable(centers)
+        slim.add_model_variable(U_z)
+        slim.add_model_variable(U_r)
+        slim.add_model_variable(U_h)
+
+        ## share_w
+        #share_w = slim.model_variable('share_w',
+        #                      shape=[3, 3, 512, centers_num], #[filter_height, filter_width, in_channels, out_channels]
+        #                      initializer=tf.contrib.layers.xavier_initializer(),
+        #                      
+        #                      regularizer=slim.l2_regularizer(weight_decay),
+        #                      )
+        #share_b = slim.model_variable('share_b',
+        #                      shape=[64],
+        #                      initializer=tf.truncated_normal_initializer(stddev=0.1),
+        #                      regularizer=slim.l2_regularizer(weight_decay))
+
+        #centers = slim.model_variable('centers',
+        #                      shape=[1,512,centers_num],
+        #                      initializer=tf.truncated_normal_initializer(stddev=0.1),#tf.constant_initializer(cluster_centers),
+        #                      regularizer=slim.l2_regularizer(weight_decay),
+        #                      )
+
+        #U_z = slim.model_variable('U_z',
+        #                      shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
+        #                      initializer=tf.contrib.layers.xavier_initializer(),
+        #                      regularizer=slim.l2_regularizer(weight_decay),
+        #                      )
+        #U_r = slim.model_variable('U_r',
+        #                      shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
+        #                      initializer=tf.contrib.layers.xavier_initializer(),
+        #                      regularizer=slim.l2_regularizer(weight_decay),
+        #                      )
+        #U_h = slim.model_variable('U_h',
+        #                      shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
+        #                      initializer=tf.contrib.layers.xavier_initializer(),
+        #                      regularizer=slim.l2_regularizer(weight_decay),
+        #                      )
 
         # add parameters to end_poins
         end_points[tf.get_variable_scope().name + '/share_w'] = share_w

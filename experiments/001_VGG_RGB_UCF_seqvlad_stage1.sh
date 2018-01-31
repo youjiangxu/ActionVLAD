@@ -2,10 +2,10 @@
 #LD_PRELOAD=/usr/lib/libtcmalloc.so.4 \
 python \
   train_image_classifier.py \
-  --batch_size 3 \
+  --batch_size 4 \
   --gpus 0,1,2,3 \
-  --frames_per_video 25 \
-  --iter_size 2 \
+  --frames_per_video 10 \
+  --iter_size 4 \
   --checkpoint_path models/PreTrained/imagenet-trained-CUHK/vgg_16_action_rgb_pretrain_uptoConv5.ckpt \
   --checkpoint_style v2_withStream \
   --train_dir models/Experiments/001_VGG_RGB_UCF_seqvlad_stage1 \

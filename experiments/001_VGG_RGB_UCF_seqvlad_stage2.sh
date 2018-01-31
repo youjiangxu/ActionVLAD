@@ -1,11 +1,11 @@
 # cd ../
-LD_PRELOAD=/usr/lib/libtcmalloc.so.4 \
-  $(which python) \
+#LD_PRELOAD=/usr/lib/libtcmalloc.so.4 \
+$(which python) \
   train_image_classifier.py \
   --batch_size 4 \
-  --gpus 0 \
-  --frames_per_video 2 \
-  --iter_size 1 \
+  --gpus 0,1,2,3 \
+  --frames_per_video 10 \
+  --iter_size 4 \
   --checkpoint_path models/Experiments/001_VGG_RGB_UCF_seqvlad_stage1 \
   --checkpoint_style v2_withStream \
   --train_dir models/Experiments/001_VGG_RGB_HMDB_seqvlad_stage2 \
@@ -24,7 +24,7 @@ LD_PRELOAD=/usr/lib/libtcmalloc.so.4 \
   --bgr_flip True \
   --pooling seqvlad \
   --netvlad_initCenters 64 \
-  --num_steps_per_decay 5000 \
+  --num_steps_per_decay 10000 \
   --learning_rate_decay_factor 0.1 \
   --clip_gradients 5 \
   --num_streams 1 \
@@ -32,4 +32,4 @@ LD_PRELOAD=/usr/lib/libtcmalloc.so.4 \
   --train_image_size 224 \
   --weight_decay 4e-5 \
   --split_id 1 \
-  --max_number_of_steps 8000
+  --max_number_of_steps 15000
