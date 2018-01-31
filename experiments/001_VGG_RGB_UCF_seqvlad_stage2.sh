@@ -4,11 +4,11 @@ $(which python) \
   train_image_classifier.py \
   --batch_size 4 \
   --gpus 0,1,2,3 \
-  --frames_per_video 10 \
+  --frames_per_video 20 \
   --iter_size 4 \
-  --checkpoint_path models/Experiments/001_VGG_RGB_UCF_seqvlad_stage1 \
+  --checkpoint_path models/Experiments/001_VGG_RGB_UCF_seqvlad_stage1_f25 \
   --checkpoint_style v2_withStream \
-  --train_dir models/Experiments/001_VGG_RGB_HMDB_seqvlad_stage2 \
+  --train_dir models/Experiments/001_VGG_RGB_UCF_seqvlad_stage2_f25 \
   --dataset_list_dir data/ucf101/train_test_lists/ \
   --dataset_dir data/ucf101/frames \
   --dataset_name ucf101 \
