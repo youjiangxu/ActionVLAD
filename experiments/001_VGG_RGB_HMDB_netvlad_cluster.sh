@@ -1,4 +1,4 @@
-cd ../
+#cd ../
 nice -n 19 python vlad_utils/cluster_feats.py \
   -i models/Experiments/001_VGG_RGB_HMDB_netvlad_stage1/Features/imnet_conv5.h5 \
   -o models/Experiments/001_VGG_RGB_HMDB_netvlad_stage1/Features/imnet_conv5_kmeans64.pkl \

@@ -1,0 +1,45 @@
+##### ##### last_conv shape: [125, 14, 14, 512]
+('net shape():', [125, 14, 14, 512])
+('################## timesteps', 125)
+('assignments', [1, 125, 14, 14, 64])
+('assignments', [125, 1, 14, 14, 64])
+('initial_state', [1, 14, 14, 64])
+('h_tm1', [1, 14, 14, 64])
+<type 'list'>
+global_step:0
+stream0/vgg_16/conv1/conv1_1/weights:0
+stream0/vgg_16/conv1/conv1_1/biases:0
+stream0/vgg_16/conv1/conv1_2/weights:0
+stream0/vgg_16/conv1/conv1_2/biases:0
+stream0/vgg_16/conv2/conv2_1/weights:0
+stream0/vgg_16/conv2/conv2_1/biases:0
+stream0/vgg_16/conv2/conv2_2/weights:0
+stream0/vgg_16/conv2/conv2_2/biases:0
+stream0/vgg_16/conv3/conv3_1/weights:0
+stream0/vgg_16/conv3/conv3_1/biases:0
+stream0/vgg_16/conv3/conv3_2/weights:0
+stream0/vgg_16/conv3/conv3_2/biases:0
+stream0/vgg_16/conv3/conv3_3/weights:0
+stream0/vgg_16/conv3/conv3_3/biases:0
+stream0/vgg_16/conv4/conv4_1/weights:0
+stream0/vgg_16/conv4/conv4_1/biases:0
+stream0/vgg_16/conv4/conv4_2/weights:0
+stream0/vgg_16/conv4/conv4_2/biases:0
+stream0/vgg_16/conv4/conv4_3/weights:0
+stream0/vgg_16/conv4/conv4_3/biases:0
+stream0/vgg_16/conv5/conv5_1/weights:0
+stream0/vgg_16/conv5/conv5_1/biases:0
+stream0/vgg_16/conv5/conv5_2/weights:0
+stream0/vgg_16/conv5/conv5_2/biases:0
+stream0/vgg_16/conv5/conv5_3/weights:0
+stream0/vgg_16/conv5/conv5_3/biases:0
+stream0/SeqVLAD/redu_w:0
+stream0/SeqVLAD/redu_b:0
+stream0/SeqVLAD/share_w:0
+stream0/SeqVLAD/share_b:0
+stream0/SeqVLAD/centers:0
+stream0/SeqVLAD/U_z:0
+stream0/SeqVLAD/U_r:0
+stream0/SeqVLAD/U_h:0
+stream0/classifier/logits/weights:0
+stream0/classifier/logits/biases:0

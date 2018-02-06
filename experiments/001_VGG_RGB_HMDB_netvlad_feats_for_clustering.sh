@@ -1,7 +1,7 @@
 # note, can use the any split model as upto conv5 for RGB (on HMDB) it is basically imagenet pretrained
-cd ../
-LD_PRELOAD=/usr/lib64/libtcmalloc.so.4 \
-  $(which python) \
+#cd ../
+#LD_PRELOAD=/usr/lib64/libtcmalloc.so.4 \
+$(which python) \
   eval_image_classifier.py \
   --gpus 2 \
   --batch_size 64 \

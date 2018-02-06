@@ -186,8 +186,9 @@ def preprocess_for_eval(image, output_height, output_width,
       image, 31, 115, output_height, output_width))
     collect.append(tf.image.crop_to_bounding_box(
       image, 16, 60, output_height, output_width))
-    # for i in range(5):
-    #   collect.append(tf.image.flip_left_right(collect[i]))
+    ## for flip
+    #for i in range(5):
+    #  collect.append(tf.image.flip_left_right(collect[i]))
     for i in range(len(collect)):
       collect[i] = _mean_image_subtraction(tf.to_float(collect[i]), mean_vals)
     images = tf.pack(collect)
