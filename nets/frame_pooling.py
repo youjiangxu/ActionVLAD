@@ -116,35 +116,34 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
 
       print('<netvlad_initCenters> must be a [interger] for <seqvlad> pooling types ...')
       exit()
-      # with open(netvlad_initCenters, 'rb') as fin:
-      #   kmeans = pickle.load(fin)
-      #   cluster_centers = kmeans.cluster_centers_
-    with tf.variable_scope('SeqVLAD'):
+    with tf.variable_scope('NetVLAD'):
         # normalize features
-        #net_normed = tf.nn.l2_normalize(net, 3, name='FeatureNorm')
-        #end_points[tf.get_variable_scope().name + '/net_normed'] = net_normed
-        net_relu = tf.nn.relu(net)
-        end_points[tf.get_variable_scope().name+'/net_relu']=net_relu
-        # model parameters
+        net_normed = tf.nn.l2_normalize(net, 3, name='FeatureNorm')
+        end_points[tf.get_variable_scope().name + '/net_normed'] = net_normed
+        
+	#net_relu = tf.nn.relu(net)
+        #end_points[tf.get_variable_scope().name+'/net_relu']=net_relu
+        
+	# model parameters
         centers_num = 64
         input_shape = net.get_shape().as_list()
         # initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(input_shape[-1])) # yanbin liu
         
         
         # share_w
-        share_w = tf.get_variable('share_w',
-                              shape=[3, 3, 512, centers_num], #[filter_height, filter_width, in_channels, out_channels]
+        share_w = tf.get_variable('vlad_W',
+                              shape=[1, 1, input_shape[-1], centers_num], #[filter_height, filter_width, in_channels, out_channels]
                               initializer=tf.contrib.layers.xavier_initializer(),
                               
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
-        share_b = tf.get_variable('share_b',
-                              shape=[64],
+        share_b = tf.get_variable('vlad_B',
+                              shape=[centers_num],
                               initializer=tf.truncated_normal_initializer(stddev=0.1),
                               regularizer=slim.l2_regularizer(weight_decay))
 
         centers = tf.get_variable('centers',
-                              shape=[1,512,centers_num],
+                              shape=[1,input_shape[-1],centers_num],
                               initializer=tf.truncated_normal_initializer(stddev=0.1),#tf.constant_initializer(cluster_centers),
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
@@ -170,44 +169,14 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
         slim.add_model_variable(U_z)
         slim.add_model_variable(U_r)
         slim.add_model_variable(U_h)
+        
+        centers = tf.reshape(centers, [1, input_shape[1], centers_num])
 
-        ## share_w
-        #share_w = slim.model_variable('share_w',
-        #                      shape=[3, 3, 512, centers_num], #[filter_height, filter_width, in_channels, out_channels]
-        #                      initializer=tf.contrib.layers.xavier_initializer(),
-        #                      
-        #                      regularizer=slim.l2_regularizer(weight_decay),
-        #                      )
-        #share_b = slim.model_variable('share_b',
-        #                      shape=[64],
-        #                      initializer=tf.truncated_normal_initializer(stddev=0.1),
-        #                      regularizer=slim.l2_regularizer(weight_decay))
 
-        #centers = slim.model_variable('centers',
-        #                      shape=[1,512,centers_num],
-        #                      initializer=tf.truncated_normal_initializer(stddev=0.1),#tf.constant_initializer(cluster_centers),
-        #                      regularizer=slim.l2_regularizer(weight_decay),
-        #                      )
-
-        #U_z = slim.model_variable('U_z',
-        #                      shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
-        #                      initializer=tf.contrib.layers.xavier_initializer(),
-        #                      regularizer=slim.l2_regularizer(weight_decay),
-        #                      )
-        #U_r = slim.model_variable('U_r',
-        #                      shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
-        #                      initializer=tf.contrib.layers.xavier_initializer(),
-        #                      regularizer=slim.l2_regularizer(weight_decay),
-        #                      )
-        #U_h = slim.model_variable('U_h',
-        #                      shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
-        #                      initializer=tf.contrib.layers.xavier_initializer(),
-        #                      regularizer=slim.l2_regularizer(weight_decay),
-        #                      )
 
         # add parameters to end_poins
-        end_points[tf.get_variable_scope().name + '/share_w'] = share_w
-        end_points[tf.get_variable_scope().name + '/share_b'] = share_b
+        end_points[tf.get_variable_scope().name + '/vlad_W'] = share_w
+        end_points[tf.get_variable_scope().name + '/vlad_B'] = share_b
         end_points[tf.get_variable_scope().name + '/centers'] = centers
         end_points[tf.get_variable_scope().name + '/U_z'] = U_z
         end_points[tf.get_variable_scope().name + '/U_r'] = U_r
@@ -220,9 +189,10 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
 	
         assert input_shape[0]%videos_per_batch==0
         # assignment = tf.reshape(net,[videos_per_batch, -1, input_shape[]])
-        w_conv_x = tf.add(tf.nn.conv2d(net, share_w, [1,1,1,1], 'SAME', name='w_conv_x'),tf.reshape(share_b,[1, 1, 1, centers_num]))
-        
-        assignments = tf.reshape(w_conv_x,[videos_per_batch, -1, input_shape[1], input_shape[2], centers_num])
+        w_conv_x = tf.nn.conv2d(net, share_w, [1,1,1,1], 'SAME', name='w_conv_x')
+        assignments = tf.nn.bias_add(w_convx, share_b)
+
+        assignments = tf.reshape(assignments, [videos_per_batch, -1, input_shape[1], input_shape[2], centers_num])
         print('assignments', assignments.get_shape().as_list())
 
 
