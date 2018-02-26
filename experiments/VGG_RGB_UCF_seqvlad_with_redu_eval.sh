@@ -4,11 +4,11 @@ python \
   eval_image_classifier.py \
   --gpus 1 \
   --batch_size 1 \
-  --frames_per_video 10 \
-  --checkpoint_path models/Experiments/VGG_RGB_HMDB_seqvlad_stage2 \
-  --dataset_dir data/hmdb51/frames \
-  --dataset_list_dir data/hmdb51/train_test_lists \
-  --dataset_name hmdb51 \
+  --frames_per_video 20 \
+  --checkpoint_path models/Experiments/VGG_RGB_UCF_seqvlad_with_redu_stage3 \
+  --dataset_dir data/ucf101/frames \
+  --dataset_list_dir data/ucf101/train_test_lists \
+  --dataset_name ucf101 \
   --dataset_split_name test \
   --model_name vgg_16 \
   --modality rgb \
@@ -17,6 +17,7 @@ python \
   --preprocessing_name vgg_ucf \
   --bgr_flip True \
   --pooling seqvlad-with-redu \
+  --redu_dim 256 \
   --netvlad_initCenters 64 \
   --classifier_type linear \
   --ncrops 5

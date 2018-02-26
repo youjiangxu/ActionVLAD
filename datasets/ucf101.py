@@ -15,7 +15,7 @@ from datasets.video_data_utils import gen_dataset
 
 def get_split(split_name, dataset_dir, dataset_list_dir='', file_pattern=None,
               reader=None, modality='rgb', num_samples=1,
-              split_id=1):
+              split_id=1, is_step=False,):
   
   _NUM_CLASSES = 101
   _LIST_FN = lambda split, id: \
@@ -23,4 +23,4 @@ def get_split(split_name, dataset_dir, dataset_list_dir='', file_pattern=None,
 
   return gen_dataset(split_name, dataset_dir, file_pattern,
                      reader, modality, num_samples, split_id,
-                     _NUM_CLASSES, _LIST_FN)
+                     _NUM_CLASSES, _LIST_FN, is_step=is_step,)

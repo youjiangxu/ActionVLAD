@@ -1,8 +1,8 @@
-cd ../
-LD_PRELOAD=/usr/lib64/libtcmalloc.so.4 \
-  python \
+#cd ../
+#LD_PRELOAD=/usr/lib64/libtcmalloc.so.4 \
+python \
   eval_image_classifier.py \
-  --gpus 1 \
+  --gpus 2 \
   --batch_size 1 \
   --frames_per_video 25 \
   --checkpoint_path models/Experiments/001_VGG_RGB_HMDB_netvlad_stage2 \

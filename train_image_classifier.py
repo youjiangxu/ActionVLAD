@@ -42,6 +42,11 @@ from restore import model_restorer
 slim = tf.contrib.slim
 
 FLAGS = tf.app.flags.FLAGS
+tf.app.flags.DEFINE_integer('redu_dim', 512, 
+                             'reduction dim for seqvlad with redu, only useful when using seqvlad-with-redu.')
+
+tf.app.flags.DEFINE_boolean('is_step', False,
+       'read image with inter step [1,2,3,4]. default is false')
 
 tf.app.flags.DEFINE_string(
     'master', '', 'The address of the TensorFlow master to use.')
@@ -305,7 +310,7 @@ tf.app.flags.DEFINE_string(
 
 tf.app.flags.DEFINE_string(
     'pooling', None,
-    'Set =[netvlad/avg-conv/seqvlad] to train with that.')
+    'Set =[netvlad/avg-conv/seqvlad/seqvlad-with-redu] to train with that.')
 
 tf.app.flags.DEFINE_string(
     'classifier_type', 'linear',
@@ -468,6 +473,7 @@ def _get_init_fn():
   # TODO(sguada) variables.filter_variables()
   variables_to_restore = []
   for var in slim.get_model_variables():
+    print(var.name)
     excluded = False
     for exclusion in exclusions:
       if var.op.name.startswith(exclusion):
@@ -613,7 +619,8 @@ def main(_):
         dataset_list_dir=FLAGS.dataset_list_dir,
         num_samples=FLAGS.frames_per_video,
         modality=FLAGS.modality,
-        split_id=FLAGS.split_id)
+        split_id=FLAGS.split_id,
+        is_step=FLAGS.is_step,)
 
     ######################
     # Select the network #
@@ -692,6 +699,7 @@ def main(_):
           num_channels_stream=provider.num_channels_stream,
           netvlad_centers=FLAGS.netvlad_initCenters.split(','),
           stream_pool_type=FLAGS.stream_pool_type,
+          redu_dim=FLAGS.redu_dim,
           **kwargs)
 
       #############################
@@ -720,11 +728,11 @@ def main(_):
     end_points_debug = dict(end_points)
     end_points_debug['images'] = images
     end_points_debug['labels'] = labels
-    for end_point in end_points:
-      x = end_points[end_point]
-      summaries.add(tf.histogram_summary('activations/' + end_point, x))
-      summaries.add(tf.scalar_summary('sparsity/' + end_point,
-                                      tf.nn.zero_fraction(x)))
+    #for end_point in end_points:
+    #  x = end_points[end_point]
+    #  summaries.add(tf.histogram_summary('activations/' + end_point, x))
+    #  summaries.add(tf.scalar_summary('sparsity/' + end_point,
+    #                                  tf.nn.zero_fraction(x)))
 
     # Add summaries for losses.
     for loss in tf.get_collection(tf.GraphKeys.LOSSES, first_clone_scope):

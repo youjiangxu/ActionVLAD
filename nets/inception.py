@@ -22,4 +22,9 @@ from __future__ import print_function
 from nets.inception_v2_tsn import inception_v2_tsn
 from nets.inception_v2_tsn import inception_v2_tsn_arg_scope
 from nets.inception_v2_tsn import inception_v2_tsn_base
+
+
+from nets.inception_v3 import inception_v3
+from nets.inception_v3 import inception_v3_arg_scope
+from nets.inception_v3 import inception_v3_base
 # pylint: enable=unused-import

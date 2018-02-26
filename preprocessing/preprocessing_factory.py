@@ -26,6 +26,7 @@ from __future__ import print_function
 import tensorflow as tf
 
 from preprocessing import vgg_ucf_preprocessing
+from preprocessing import inception_preprocessing
 
 slim = tf.contrib.slim
 
@@ -48,6 +49,7 @@ def get_preprocessing(name, is_training=False):
   """
   preprocessing_fn_map = {
       'vgg_ucf': vgg_ucf_preprocessing,
+      'inception': inception_preprocessing,
   }
 
   if name not in preprocessing_fn_map:
@@ -62,9 +64,11 @@ def get_preprocessing(name, is_training=False):
         # preprocess all the images in one set in the same way by concat-ing
         # them in channels
         nImgs = image.get_shape().as_list()[0]
+        print('nImgs',nImgs)
         final_img_concat = preprocessing_fn_map[name].preprocess_image(
             tf.concat(2, tf.unpack(image)),
             output_height, output_width, is_training=is_training, **kwargs)
+        print(final_img_concat.get_shape().as_list())
         return tf.concat(0, tf.split(3, nImgs, final_img_concat))
       else:
         print('Incorrect dims image!')

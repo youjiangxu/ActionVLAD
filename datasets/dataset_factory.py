@@ -46,7 +46,7 @@ datasets_map = {
 
 def get_dataset(name, split_name, dataset_dir, dataset_list_dir='',
                 file_pattern=None, reader=None, modality='rgb', num_samples=1,
-                split_id=1):
+                split_id=1, is_step=False):
   """Given a dataset name and a split_name returns a Dataset.
 
   Args:
@@ -76,4 +76,4 @@ def get_dataset(name, split_name, dataset_dir, dataset_list_dir='',
       reader,
       modality,
       num_samples,
-      split_id=split_id)
+      split_id=split_id, is_step=is_step,)

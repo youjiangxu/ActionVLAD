@@ -23,7 +23,7 @@ from tensorflow.python.platform import tf_logging as logging
 slim = tf.contrib.slim
 
 
-def getReaderFn(num_samples, modality='rgb', dataset_dir=''):
+def getReaderFn(num_samples, modality='rgb', dataset_dir='', is_step=False):
   def readerFn():
     class reader_func(tf.ReaderBase):
       @staticmethod
@@ -39,7 +39,7 @@ def getReaderFn(num_samples, modality='rgb', dataset_dir=''):
           image_buffer = _read_from_disk_spatial(
               fpath, nframes, num_samples=num_samples,
               file_prefix='image', file_zero_padding=5, file_index=1,
-              dataset_dir=dataset_dir[0])
+              dataset_dir=dataset_dir[0], is_step=is_step)
         elif modality.startswith('flow'):
           assert(len(dataset_dir) >= 1)
           optical_flow_frames = int(modality[4:])
@@ -120,7 +120,7 @@ def count_frames_file(fpath, frameLevel=True):
 
 def gen_dataset(split_name, dataset_dir, file_pattern=None,
                 reader=None, modality='rgb', num_samples=1,
-                split_id=1, num_classes=0, list_fn=None):
+                split_id=1, num_classes=0, list_fn=None, is_step=False):
   SPLITS_TO_SIZES = {
     'train': count_frames_file(list_fn('train', split_id), frameLevel=(num_samples==1)),
     'test': count_frames_file(list_fn('test', split_id), frameLevel=(num_samples==1)),
@@ -139,7 +139,7 @@ def gen_dataset(split_name, dataset_dir, file_pattern=None,
 
   # Allowing None in the signature so that dataset_factory can use the default.
   if not reader:
-    reader = getReaderFn(num_samples, modality, dataset_dir)
+    reader = getReaderFn(num_samples, modality, dataset_dir, is_step=is_step)
 
   labels_to_names = None
   # if dataset_utils.has_labels(dataset_dir):

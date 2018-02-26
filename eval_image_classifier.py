@@ -39,6 +39,8 @@ slim = tf.contrib.slim
 
 FLAGS = tf.app.flags.FLAGS
 
+tf.app.flags.DEFINE_integer('redu_dim', 256, 'the reduction dim')
+
 tf.app.flags.DEFINE_integer(
     'batch_size', 100, 'The number of samples in each batch.')
 
@@ -253,6 +255,7 @@ def main(_):
         num_channels_stream=provider.num_channels_stream,
         netvlad_centers=FLAGS.netvlad_initCenters.split(','),
         stream_pool_type=FLAGS.stream_pool_type,
+        redu_dim=FLAGS.redu_dim,
         **kwargs)
     end_points['images'] = images
     end_points['labels'] = labels

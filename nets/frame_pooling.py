@@ -5,7 +5,7 @@
 # ------------------------------------------------------------------------------
 import numpy as np
 import cPickle as pickle
-
+import math
 import tensorflow as tf
 from tensorflow.contrib import slim
 from tensorflow.python.platform import tf_logging as logging
@@ -128,11 +128,13 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
         centers_num = 64
         #input_shape = net.get_shape().as_list()
 	
-	net = tf.nn.l2_normalize(net, 3, name='FeatureNorm')
-        end_points[tf.get_variable_scope().name + '/net_normed'] = net
+	#net = tf.nn.l2_normalize(net, 3, name='FeatureNorm')
+        #end_points[tf.get_variable_scope().name + '/net_normed'] = net
         
+	net = tf.nn.pool(net, [3,3], 'MAX', 'SAME',strides=[2,2], name='pool5')
+ 	print('pool5.shape',net.get_shape().as_list())
 	print('------------>>>>>>> cluster_centers shape',cluster_centers.shape)
-
+	
         centers = tf.get_variable('centers',
                               shape = [512,centers_num],
                               initializer = tf.constant_initializer(cluster_centers.transpose()),
@@ -304,6 +306,219 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
 
 
     return vlad_rep, end_points
+
+def seqvlad_with_redu(net, videos_per_batch, weight_decay, netvlad_initCenters, redu_dim=256, centers_num=64):
+    # Sequential VLAD pooling with redu
+    end_points = {}
+    #try:
+    #  print('---------------------------------->>>>>>>>>>>>>>>--------------------')
+    #  print('net shape():', net.get_shape().as_list())
+    #  print('----------------------------------<<<<<<<<<<<<<<<--------------------')
+    #  netvlad_initCenters = int(netvlad_initCenters)
+    #  # initialize the cluster centers randomly
+    #  cluster_centers = np.random.normal(size=(
+    #    netvlad_initCenters, net.get_shape().as_list()[-1]))
+    #  logging.info('Randomly initializing the {} netvlad cluster '
+    #               'centers'.format(cluster_centers.shape))
+    #except ValueError:
+    #    print('---------->>>> load from file ---------')
+    #    
+    #    with open(netvlad_initCenters, 'rb') as fin:
+    #    	kmeans = pickle.load(fin)
+    #    	cluster_centers = kmeans.cluster_centers_
+    with tf.variable_scope('SeqVLAD'):
+        # normalize features
+        # net_normed = tf.nn.l2_normalize(net, 3, name='FeatureNorm')
+        # end_points[tf.get_variable_scope().name + '/net_normed'] = net_normed
+        # model parameters
+        #centers_num = 64
+	
+        
+	#net = tf.nn.pool(net, [3,3], 'MAX', 'SAME',strides=[2,2], name='pool5')
+ 	#print('pool5.shape',net.get_shape().as_list())
+	#print('------------>>>>>>> cluster_centers shape',cluster_centers.shape)
+        #net = tf.nn.relu(net)
+        input_shape = net.get_shape().as_list()
+       
+ 	print('input.shape', input_shape)
+        print('redu_dim', redu_dim)
+	
+         
+        if input_shape[-1] != redu_dim: 
+            net = slim.conv2d(net, redu_dim, [1, 1], scope='redu') 
+            #net = tf.nn.relu(net)
+	    print('redu shape', net.get_shape().as_list())	
+		
+        input_shape = net.get_shape().as_list()
+
+
+	centers = tf.get_variable('centers',
+                              shape = [1,input_shape[-1],centers_num],
+                              initializer=tf.random_normal_initializer(stddev=1./math.sqrt(input_shape[-1])),
+                              regularizer = slim.l2_regularizer(weight_decay),
+                              )
+        
+        # share_w
+	share_w = tf.get_variable('share_w',
+                              shape=[3, 3, input_shape[-1], centers_num], #[filter_height, filter_width, in_channels, out_channels]
+                              initializer=tf.contrib.layers.xavier_initializer(),
+                              regularizer=slim.l2_regularizer(weight_decay),
+                              )
+        share_b = tf.get_variable('share_b',
+                              shape=[centers_num,],
+                              initializer=tf.random_normal_initializer(stddev=1./math.sqrt(centers_num)),
+                              regularizer=slim.l2_regularizer(weight_decay))
+
+
+        #with tf.variable_scope('h2h'):
+        U_z = tf.get_variable('U_z',
+                              shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
+                              initializer=tf.contrib.layers.xavier_initializer(),
+                              regularizer=slim.l2_regularizer(weight_decay),
+                              )
+        U_r = tf.get_variable('U_r',
+                              shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
+                              initializer=tf.contrib.layers.xavier_initializer(),
+                              regularizer=slim.l2_regularizer(weight_decay),
+                              )
+        U_h = tf.get_variable('U_h',
+                              shape=[3, 3, centers_num, centers_num], #[filter_height, filter_width, in_channels, out_channels]
+                              initializer=tf.contrib.layers.xavier_initializer(),
+                              regularizer=slim.l2_regularizer(weight_decay),
+                              )
+        end_points[tf.get_variable_scope().name + '/U_z'] = U_z
+        end_points[tf.get_variable_scope().name + '/U_r'] = U_r
+        end_points[tf.get_variable_scope().name + '/U_h'] = U_h
+	slim.add_model_variable(U_z)
+        slim.add_model_variable(U_r)
+        slim.add_model_variable(U_h)
+
+
+
+        slim.add_model_variable(share_w)
+        slim.add_model_variable(share_b)
+        slim.add_model_variable(centers)
+        
+        # add parameters to end_poins
+        
+        end_points[tf.get_variable_scope().name + '/share_w'] = share_w
+        end_points[tf.get_variable_scope().name + '/share_b'] = share_b
+        end_points[tf.get_variable_scope().name + '/centers'] = centers
+        # seqvlad 
+
+
+         	
+
+        input_shape = net.get_shape().as_list()
+        timesteps = input_shape[0]//videos_per_batch
+        print("################## timesteps", timesteps)
+	
+        assert input_shape[0]%videos_per_batch==0
+        # assignment = tf.reshape(net,[videos_per_batch, -1, input_shape[]])
+        w_conv_x = tf.add(tf.nn.conv2d(net, share_w, [1,1,1,1], 'SAME', name='w_conv_x'),tf.reshape(share_b,[1, 1, 1, centers_num]))
+        
+        assignments = tf.reshape(w_conv_x,[videos_per_batch, -1, input_shape[1], input_shape[2], centers_num])
+        print('assignments', assignments.get_shape().as_list())
+
+
+        axis = [1,0]+list(range(2,5))  # axis = [1,0,2]
+        assignments = tf.transpose(assignments, perm=axis)
+
+        input_assignments = tf.TensorArray(
+                dtype=assignments.dtype,
+                size=timesteps,
+                tensor_array_name='input_assignments')
+        if hasattr(input_assignments, 'unstack'):
+          input_assignments = input_assignments.unstack(assignments)
+        else:
+          input_assignments = input_assignments.unpack(assignments)  
+
+        hidden_states = tf.TensorArray(
+                dtype=tf.float32,
+                size=timesteps,
+                tensor_array_name='hidden_states')
+
+        def get_init_state(x, output_dims):
+
+          initial_state = tf.zeros_like(x)
+          initial_state = tf.reduce_sum(initial_state,axis=[0,4])
+          initial_state = tf.expand_dims(initial_state,dim=-1)
+          initial_state = tf.tile(initial_state,[1,1,1,output_dims])
+          return initial_state
+
+        def step(time, hidden_states, h_tm1):
+          assign_t = input_assignments.read(time) # batch_size * dim
+          print('h_tm1', h_tm1.get_shape().as_list())
+          r = tf.nn.sigmoid(tf.add(assign_t, tf.nn.conv2d(h_tm1, U_r, [1,1,1,1], 'SAME', name='r')))
+          z = tf.nn.sigmoid(tf.add(assign_t, tf.nn.conv2d(h_tm1, U_z, [1,1,1,1], 'SAME', name='z')))
+
+          hh = tf.tanh(tf.add(assign_t, tf.nn.conv2d(r*h_tm1, U_h,  [1,1,1,1], 'SAME', name='hh')))
+
+          h = (1-z)*hh + z*h_tm1
+        
+          hidden_states = hidden_states.write(time, h)
+
+          return (time+1,hidden_states, h)
+
+        time = tf.constant(0, dtype='int32', name='time')
+        print('assignments', assignments.get_shape().as_list())
+        initial_state = get_init_state(assignments,centers_num)
+        print('initial_state', initial_state.get_shape().as_list())
+        timesteps = tf.constant(timesteps, dtype='int32',name='timesteps')	
+        feature_out = tf.while_loop(
+                cond=lambda time, *_: time < timesteps,
+                body=step,
+                loop_vars=(time, hidden_states, initial_state ),
+                parallel_iterations=32,
+                swap_memory=True)
+
+
+        recur_assigns = feature_out[-2]
+        if hasattr(hidden_states, 'stack'):
+          recur_assigns = recur_assigns.stack()
+        else:
+          recur_assigns = recur_assigns.pack()
+
+        
+        
+        axis = [1,0]+list(range(2,5))  # axis = [1,0,2]
+        recur_assigns = tf.transpose(recur_assigns, perm=axis)
+
+
+        recur_assigns = tf.reshape(recur_assigns,[-1,input_shape[1]*input_shape[2],centers_num])
+
+        #recur_assigns = tf.nn.softmax(recur_assigns,dim=-1)
+
+        # for alpha * c
+        a_sum = tf.reduce_sum(recur_assigns,-2,keep_dims=True)
+        a = tf.multiply(a_sum,centers)
+        # for alpha * x
+        recur_assigns = tf.transpose(recur_assigns,perm=[0,2,1])
+        net = tf.reshape(net,[-1,input_shape[1]*input_shape[2],input_shape[3]])
+        vlad = tf.matmul(recur_assigns,net)
+        vlad = tf.transpose(vlad, perm=[0,2,1])
+
+        # for differnce
+        vlad = tf.subtract(vlad,a)
+
+        vlad = tf.reshape(vlad,[videos_per_batch, -1, input_shape[3], centers_num])
+        vlad_rep = tf.reduce_sum(vlad, axis=1)
+
+        end_points[tf.get_variable_scope().name + '/unnormed_vlad'] = vlad_rep
+        with tf.name_scope('intranorm'):
+          vlad_rep = tf.nn.l2_normalize(vlad_rep, 1)
+        end_points[tf.get_variable_scope().name + '/intranormed_vlad'] = vlad_rep
+        with tf.name_scope('finalnorm'):
+          vlad_rep = tf.reshape(vlad_rep,[-1, input_shape[3]*centers_num])
+          vlad_rep = tf.nn.l2_normalize(vlad_rep,-1)
+
+
+    return vlad_rep, end_points
+
+
+
+
+
 def pool_conv(net, videos_per_batch, type='avg'):
     """
     Pool all the features across the frame and across all the frames

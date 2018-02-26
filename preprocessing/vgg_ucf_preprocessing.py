@@ -247,8 +247,10 @@ def preprocess_image(image, output_height, output_width, is_training=False,
     logging.info('Assuming the batch is full of Flow images.')
     mean_vals = [FLOW_MEAN] * num_channels
   if is_training:
+    print(image.get_shape().as_list())
     res = preprocess_for_train(image, output_height, output_width, mean_vals,
                                out_dim_scale)
+    print(res.get_shape().as_list())
   else:
     logging.info('Performing eval pre-processing')
     res = preprocess_for_eval(image, output_height, output_width, mean_vals,

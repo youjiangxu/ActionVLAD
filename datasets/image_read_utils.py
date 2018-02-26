@@ -10,7 +10,7 @@ IM_WD = 340
 
 def _read_from_disk_spatial(fpath, nframes, num_samples=25, start_frame=0,
                             file_prefix='', file_zero_padding=4, file_index=1,
-                            dataset_dir='', step=None):
+                            dataset_dir='', step=None, is_step=False):
     duration = nframes
     if step is None:
       if num_samples == 1:
@@ -19,10 +19,17 @@ def _read_from_disk_spatial(fpath, nframes, num_samples=25, start_frame=0,
           step = tf.cast((duration-tf.constant(1)) /
                          (tf.constant(num_samples-1)), 'int32')
     allimgs = []
+    
+    if is_step:
+      print('inter step size is randomly choosed from [1,2,3,4]')
+      inter_step = tf.random_uniform([1], 1, 4+1, dtype='int32')[0]
+      print('inter_step', inter_step)
+      step = step // inter_step
     with tf.variable_scope('read_rgb_video'):
         for i in range(num_samples):
             if num_samples == 1:
                 i = 1  # so that the random step value can be used
+	    
             with tf.variable_scope('read_rgb_image'):
                 prefix = file_prefix + '_' if file_prefix else ''
                 impath = tf.string_join([

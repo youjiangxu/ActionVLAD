@@ -5,7 +5,7 @@ python \
   --gpus 1 \
   --batch_size 1 \
   --frames_per_video 10 \
-  --checkpoint_path models/Experiments/VGG_RGB_HMDB_seqvlad_stage2 \
+  --checkpoint_path models/Experiments/VGG_RGB_HMDB_seqvlad_with_redu_stage1_1w \
   --dataset_dir data/hmdb51/frames \
   --dataset_list_dir data/hmdb51/train_test_lists \
   --dataset_name hmdb51 \

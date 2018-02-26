@@ -37,12 +37,14 @@ networks_map = {'vgg_a': vgg.vgg_a,
                 'vgg_16': vgg.vgg_16,
                 'vgg_19': vgg.vgg_19,
                 'inception_v2_tsn': inception.inception_v2_tsn,
+                'inception_v3': inception.inception_v3,
                }
 
 arg_scopes_map = {'vgg_a': vgg.vgg_arg_scope,
                   'vgg_16': vgg.vgg_arg_scope,
                   'vgg_19': vgg.vgg_arg_scope,
                   'inception_v2_tsn': inception.inception_v2_tsn_arg_scope,
+                  'inception_v3': inception.inception_v3_arg_scope,
                  }
 
 def split_images(images, num_channels_stream):
@@ -61,7 +63,9 @@ def get_network_fn(
     weight_decay=0.0, is_training=False,
     dropout_keep_prob=0.2,
     pooled_dropout_keep_prob=0.5,
-    batch_norm=False):
+    batch_norm=False,
+    redu_dim=None,
+    ):
   """Returns a network_fn such as `logits, end_points = network_fn(images)`.
 
   Args:
@@ -88,6 +92,7 @@ def get_network_fn(
                  num_channels_stream=None,
                  netvlad_centers=[],
                  stream_pool_type=None,
+                 redu_dim=None,
                  **kwargs):
     num_image_sets = 1
     if len(images.get_shape()) == 5:
@@ -105,6 +110,7 @@ def get_network_fn(
                                  dropout_keep_prob=dropout_keep_prob,
                                  conv_only=(pool_type == 'netvlad' or
                                   pool_type == 'seqvlad' or
+                                  pool_type == 'seqvlad-with-redu' or
                                   pool_type == 'avg-conv' or
                                   pool_type == 'max-conv' or
                                   stream_pool_type ==
@@ -112,7 +118,7 @@ def get_network_fn(
                                   stream_pool_type == 'one-bag-and-netvlad'),
                                  **kwargs)
           all_out_nets.append(net)
-          if pool_type in ['netvlad', 'avg-conv', 'max-conv', 'seqvlad']:
+          if pool_type in ['netvlad', 'avg-conv', 'max-conv', 'seqvlad', 'seqvlad-with-redu']:
             # last_conv = end_points[tf.get_variable_scope().name + '/' +
             #                       conv_endpoint_map[name]]
             last_conv = net  # both VGG and resnet have conv_only implemented
@@ -135,7 +141,15 @@ def get_network_fn(
                                   netvlad_initCenters=netvlad_centers[sid])
               end_points[tf.get_variable_scope().name + '/seqvlad'] = net
               end_points.update(netvlad_end_points)
-            if batch_norm:
+            elif pool_type == 'seqvlad-with-redu':
+              net, netvlad_end_points = \
+                  pooling.seqvlad_with_redu(last_conv, batch_size, 0.0,
+                                  netvlad_initCenters=netvlad_centers[sid],
+                                  redu_dim=redu_dim,)
+              end_points[tf.get_variable_scope().name + '/seqvlad'] = net
+              end_points.update(netvlad_end_points)
+
+	    if batch_norm:
               with tf.variable_scope('pooled-batch-norm'):
                 net = slim.batch_norm(net, is_training=is_training)
 

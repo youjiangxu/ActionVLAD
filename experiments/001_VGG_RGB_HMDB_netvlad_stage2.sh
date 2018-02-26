@@ -1,11 +1,11 @@
-cd ../
-LD_PRELOAD=/usr/lib64/libtcmalloc.so.4 \
-  $(which python) \
+#cd ../
+#LD_PRELOAD=/usr/lib64/libtcmalloc.so.4 \
+$(which python) \
   train_image_classifier.py \
   --batch_size 4 \
-  --gpus 0,1,2,3 \
+  --gpus 2,3 \
   --frames_per_video 25 \
-  --iter_size 1 \
+  --iter_size 2 \
   --checkpoint_path models/Experiments/001_VGG_RGB_HMDB_netvlad_stage1 \
   --checkpoint_style v2_withStream \
   --train_dir models/Experiments/001_VGG_RGB_HMDB_netvlad_stage2 \
@@ -23,7 +23,7 @@ LD_PRELOAD=/usr/lib64/libtcmalloc.so.4 \
   --preprocessing_name vgg_ucf \
   --bgr_flip True \
   --pooling netvlad \
-  --netvlad_initCenters models/kmeans-init/hmdb51/rgb_conv5_kmeans64.pkl \
+  --netvlad_initCenters models/Experiments/001_VGG_RGB_HMDB_netvlad_stage1/Features/imnet_conv5_kmeans64.pkl \
   --num_steps_per_decay 5000 \
   --learning_rate_decay_factor 0.1 \
   --clip_gradients 5 \
