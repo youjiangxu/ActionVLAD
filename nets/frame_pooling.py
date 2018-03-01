@@ -360,7 +360,7 @@ def seqvlad_with_redu(net, videos_per_batch, weight_decay, netvlad_initCenters, 
         
         # share_w
 	share_w = tf.get_variable('share_w',
-                              shape=[3, 3, input_shape[-1], centers_num], #[filter_height, filter_width, in_channels, out_channels]
+                              shape=[1, 1, input_shape[-1], centers_num], #[filter_height, filter_width, in_channels, out_channels]
                               initializer=tf.contrib.layers.xavier_initializer(),
                               regularizer=slim.l2_regularizer(weight_decay),
                               )
