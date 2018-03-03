@@ -5,7 +5,7 @@ python \
   --gpus 2 \
   --batch_size 1 \
   --frames_per_video 10 \
-  --checkpoint_path models/Experiments/VGG_RGB_UCF_seqvlad_with_redu_stage2 \
+  --checkpoint_path models/Experiments/VGG_RGB_UCF_seqvlad_with_redu_stage1 \
   --dataset_dir data/ucf101/frames \
   --dataset_list_dir data/ucf101/train_test_lists \
   --dataset_name ucf101 \

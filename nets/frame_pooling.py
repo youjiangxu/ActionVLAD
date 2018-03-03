@@ -310,22 +310,6 @@ def seqvlad(net, videos_per_batch, weight_decay, netvlad_initCenters):
 def seqvlad_with_redu(net, videos_per_batch, weight_decay, netvlad_initCenters, redu_dim=256, centers_num=64):
     # Sequential VLAD pooling with redu
     end_points = {}
-    #try:
-    #  print('---------------------------------->>>>>>>>>>>>>>>--------------------')
-    #  print('net shape():', net.get_shape().as_list())
-    #  print('----------------------------------<<<<<<<<<<<<<<<--------------------')
-    #  netvlad_initCenters = int(netvlad_initCenters)
-    #  # initialize the cluster centers randomly
-    #  cluster_centers = np.random.normal(size=(
-    #    netvlad_initCenters, net.get_shape().as_list()[-1]))
-    #  logging.info('Randomly initializing the {} netvlad cluster '
-    #               'centers'.format(cluster_centers.shape))
-    #except ValueError:
-    #    print('---------->>>> load from file ---------')
-    #    
-    #    with open(netvlad_initCenters, 'rb') as fin:
-    #    	kmeans = pickle.load(fin)
-    #    	cluster_centers = kmeans.cluster_centers_
     with tf.variable_scope('SeqVLAD'):
         # normalize features
         # net_normed = tf.nn.l2_normalize(net, 3, name='FeatureNorm')
@@ -334,18 +318,15 @@ def seqvlad_with_redu(net, videos_per_batch, weight_decay, netvlad_initCenters, 
         #centers_num = 64
 	
         
-	#net = tf.nn.pool(net, [3,3], 'MAX', 'SAME',strides=[2,2], name='pool5')
- 	#print('pool5.shape',net.get_shape().as_list())
-	#print('------------>>>>>>> cluster_centers shape',cluster_centers.shape)
         #net = tf.nn.relu(net)
         input_shape = net.get_shape().as_list()
-       
+        
  	print('input.shape', input_shape)
         print('redu_dim', redu_dim)
-	
+	net = tf.nn.relu(net)
          
         if input_shape[-1] != redu_dim: 
-            net = slim.conv2d(net, redu_dim, [1, 1], scope='redu') 
+            net = slim.conv2d(net, redu_dim, [1, 1], activation_fn=tf.nn.relu, scope='redu') 
             #net = tf.nn.relu(net)
 	    print('redu shape', net.get_shape().as_list())	
 		

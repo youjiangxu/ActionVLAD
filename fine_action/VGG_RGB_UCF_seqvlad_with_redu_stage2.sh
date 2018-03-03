@@ -2,11 +2,11 @@
 #LD_PRELOAD=/usr/lib/libtcmalloc.so.4 \
 python \
   train_image_classifier.py \
-  --batch_size 4 \
+  --batch_size 6 \
   --gpus 0,1,2,3 \
   --frames_per_video 10 \
   --iter_size 2 \
-  --checkpoint_path models/Experiments/VGG_RGB_UCF_seqvlad_with_redu_pretrained_stage1 \
+  --checkpoint_path models/Experiments/VGG_RGB_UCF_seqvlad_with_redu_stage1 \
   --checkpoint_style v2_withStream \
   --train_dir models/Experiments/VGG_RGB_UCF_seqvlad_with_redu_stage2 \
   --dataset_list_dir data/ucf101/train_test_lists/ \
@@ -27,7 +27,7 @@ python \
   --is_step True \
   --netvlad_initCenters models/Experiments/001_VGG_RGB_HMDB_netvlad_stage1/Features/imnet_conv5_kmeans64.pkl \
   --pooled_dropout 0.8 \
-  --num_steps_per_decay 10000 \
+  --num_steps_per_decay 5000 \
   --learning_rate_decay_factor 0.1 \
   --clip_gradients 5 \
   --num_streams 1 \
@@ -35,5 +35,5 @@ python \
   --train_image_size 224 \
   --weight_decay 4e-5 \
   --split_id 1 \
-  --max_number_of_steps 15000
+  --max_number_of_steps 10000
 #  --checkpoint_style v2_withStream \

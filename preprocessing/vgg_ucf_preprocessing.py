@@ -101,13 +101,109 @@ def _random_crop(image_list, crop_height, crop_width):
       asserts, tf.reshape(image_height - crop_height + 1, []))
   max_offset_width = control_flow_ops.with_dependencies(
       asserts, tf.reshape(image_width - crop_width + 1, []))
+
+  
   offset_height = tf.random_uniform(
       [], maxval=max_offset_height, dtype=tf.int32)
   offset_width = tf.random_uniform(
       [], maxval=max_offset_width, dtype=tf.int32)
+  
 
   return [_crop(image, offset_height, offset_width,
                 crop_height, crop_width) for image in image_list]
+
+
+
+def _corner_crop(image_list, crop_height, crop_width):
+  """Crops the given list of images.
+
+  The function applies the same crop to each image in the list. This can be
+  effectively applied when there are multiple image inputs of the same
+  dimension such as:
+
+    image, depths, normals = _corner_crop([image, depths, normals], 120, 150)
+
+  Args:
+    image_list: a list of image tensors of the same dimension but possibly
+      varying channel.
+    crop_height: the new height.
+    crop_width: the new width.
+
+  Returns:
+    the image_list with cropped images.
+
+  Raises:
+    ValueError: if there are multiple image inputs provided with different size
+      or the images are smaller than the crop dimensions.
+  """
+  if not image_list:
+    raise ValueError('Empty image_list.')
+
+  # Compute the rank assertions.
+  rank_assertions = []
+  for i in range(len(image_list)):
+    image_rank = tf.rank(image_list[i])
+    rank_assert = tf.Assert(
+        tf.equal(image_rank, 3),
+        ['Wrong rank for tensor  %s [expected] [actual]',
+         image_list[i].name, 3, image_rank])
+    rank_assertions.append(rank_assert)
+
+  image_shape = control_flow_ops.with_dependencies(
+      [rank_assertions[0]],
+      tf.shape(image_list[0]))
+  image_height = image_shape[0]
+  image_width = image_shape[1]
+  crop_size_assert = tf.Assert(
+      tf.logical_and(
+          tf.greater_equal(image_height, crop_height),
+          tf.greater_equal(image_width, crop_width)),
+      ['Crop size greater than the image size.'])
+
+  asserts = [rank_assertions[0], crop_size_assert]
+
+  for i in range(1, len(image_list)):
+    image = image_list[i]
+    asserts.append(rank_assertions[i])
+    shape = control_flow_ops.with_dependencies([rank_assertions[i]],
+                                               tf.shape(image))
+    height = shape[0]
+    width = shape[1]
+
+    height_assert = tf.Assert(
+        tf.equal(height, image_height),
+        ['Wrong height for tensor %s [expected][actual]',
+         image.name, height, image_height])
+    width_assert = tf.Assert(
+        tf.equal(width, image_width),
+        ['Wrong width for tensor %s [expected][actual]',
+         image.name, width, image_width])
+    asserts.extend([height_assert, width_assert])
+
+  # Create a random bounding box.
+  #
+  # Use tf.random_uniform and not numpy.random.rand as doing the former would
+  # generate random numbers at graph eval time, unlike the latter which
+  # generates random numbers at graph definition time.
+  # TODO (rgirdhar): Force corner crops, right now going with random crops
+  max_offset_height = control_flow_ops.with_dependencies(
+      asserts, tf.reshape(image_height - crop_height + 1, []))
+  max_offset_width = control_flow_ops.with_dependencies(
+      asserts, tf.reshape(image_width - crop_width + 1, []))
+
+
+  offset_height_list = [0, 0, max_offset_height, max_offset_height, max_offset_height//2]
+  offset_width_list = [0, max_offset_width, 0,  max_offset_width, max_offset_width//2]
+  #offset_height = tf.random_uniform(
+  #    [], maxval=max_offset_height, dtype=tf.int32)
+  #offset_width = tf.random_uniform(
+  #    [], maxval=max_offset_width, dtype=tf.int32)
+  crop_type = tf.random_uniform([], minval=0, maxval=5, dtype=tf.int32)
+  
+  
+  return [_crop(image, offset_height_list[crop_type], offset_width_list[crop_type],
+                crop_height, crop_width) for image in image_list]
+
 
 
 def preprocess_for_train(image,

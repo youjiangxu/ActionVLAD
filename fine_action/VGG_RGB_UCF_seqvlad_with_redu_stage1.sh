@@ -17,7 +17,7 @@ python \
   --modality rgb \
   --num_readers 8 \
   --num_preprocessing_threads 8 \
-  --learning_rate 0.001 \
+  --learning_rate 0.0001 \
   --optimizer adam \
   --opt_epsilon 1e-4 \
   --preprocessing_name vgg_ucf \
@@ -27,7 +27,7 @@ python \
   --is_step True \
   --netvlad_initCenters models/Experiments/001_VGG_RGB_HMDB_netvlad_stage1/Features/imnet_conv5_kmeans64.pkl \
   --pooled_dropout 0.8 \
-  --num_steps_per_decay 5000 \
+  --num_steps_per_decay 10000 \
   --learning_rate_decay_factor 0.1 \
   --clip_gradients 1 \
   --num_streams 1 \
